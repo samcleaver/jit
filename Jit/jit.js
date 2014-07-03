@@ -1951,7 +1951,7 @@ var ExtrasInitializer = {
     this.config = viz.config[className];
     this.nodeTypes = viz.fx.nodeTypes;
     var type = this.config.type;
-    this.dom = type == 'auto'? (viz.config.Label.type != 'Native') : (type != 'Native');
+	this.dom = type == 'auto'? (viz.config.Label.type != 'Native' && viz.config.Label.type != 'NativeHTML') : (type != 'Native' && type != 'NativeHTML');
     this.labelContainer = this.dom && viz.labels.getLabelContainer();
     this.isEnabled() && this.initializePost();
   },
@@ -3083,7 +3083,7 @@ var Canvas;
     
     createLabelContainer: function(type, idLabel, dim) {
       var NS = 'http://www.w3.org/2000/svg';
-      if(type == 'HTML' || type == 'Native') {
+      if(type == 'HTML' || type == 'Native' || type == "NativeHTML") {
         return $E('div', {
           'id': idLabel,
           'style': {
@@ -7906,6 +7906,90 @@ Graph.Label.DOM = new Class({
     }
 });
 
+
+
+/*
+   Class: Graph.Label.NativeHTML
+
+   Implements NativeHTML labels.
+
+   Extends:
+
+   All <Graph.Label.DOM> methods.
+
+*/
+Graph.Label.NativeHTML = new Class({
+    Implements: Graph.Label.DOM,
+
+    /*
+       Method: plotLabel
+
+       Plots a label for a given node.
+
+       Parameters:
+
+       canvas - (object) A <Canvas> instance.
+       node - (object) A <Graph.Node>.
+       controller - (object) A configuration object.
+       
+      Example:
+       
+       (start code js)
+       var viz = new $jit.Viz(options);
+       var node = viz.graph.getNode('nodeId');
+       viz.labels.plotLabel(viz.canvas, node, viz.config);
+       (end code)
+
+
+    */
+    plotLabel: function(canvas, node, controller) {
+      var id = node.id, tag = this.getLabel(id);
+
+      if(!tag && !(tag = document.getElementById(id))) {
+        tag = document.createElement('div');
+        var container = this.getLabelContainer();
+        tag.id = id;
+        tag.className = 'node';
+        tag.style.position = 'absolute';
+        controller.onCreateLabel(tag, node);
+        container.appendChild(tag);
+        this.labels[node.id] = tag;
+      }
+
+      this.placeLabel(tag, node, controller);
+      
+      var ctx = canvas.getCtx();
+      var pos = node.pos.getc(true);
+
+      ctx.font = node.getLabelData('style') + ' ' + node.getLabelData('size') + 'px ' + node.getLabelData('family');
+      ctx.textAlign = node.getLabelData('textAlign');
+      ctx.fillStyle = ctx.strokeStyle = node.getLabelData('color');
+      ctx.textBaseline = node.getLabelData('textBaseline');
+
+      this.renderLabel(canvas, node, controller);
+      
+    },
+    
+    /*
+       renderLabel
+
+       Does the actual rendering of the label in the canvas. The default
+       implementation renders the label close to the position of the node, this
+       method should be overriden to position the labels differently.
+
+       Parameters:
+
+       canvas - A <Canvas> instance.
+       node - A <Graph.Node>.
+       controller - A configuration object. See also <Hypertree>, <RGraph>, <ST>.
+    */
+    renderLabel: function(canvas, node, controller) {
+      var ctx = canvas.getCtx();
+      var pos = node.pos.getc(true);
+      ctx.fillText(node.name, pos.x, pos.y + node.getData("height") / 2);
+    }
+});
+
 /*
    Class: Graph.Label.HTML
 
@@ -8563,7 +8647,7 @@ Layouts.Tree = (function() {
 
     var siblingOffset = config.siblingOffset;
     var subtreeOffset = config.subtreeOffset;
-    var align = config.align;
+    var align = node.getData('align') || config.align;
 
     function $design(node, maxsize, acum) {
       var sval = node.getData(s, prop);
@@ -8614,7 +8698,6 @@ Layouts.Tree = (function() {
     $design(node, false, 0);
   }
 
-
   return new Class({
     /*
     Method: compute
@@ -8641,7 +8724,7 @@ Layouts.Tree = (function() {
     computePositions : function(node, prop) {
       var config = this.config;
       var multitree = config.multitree;
-      var align = config.align;
+      var align = node.getData('align') || config.align;
       var indent = align !== 'center' && config.indent;
       var orn = config.orientation;
       var orns = multitree ? [ 'top', 'right', 'bottom', 'left' ] : [ orn ];
@@ -9674,41 +9757,43 @@ $jit.ST.Geom = new Class({
           };
         };
         var dim = this.node;
+        var align = node.getData('align') || dim.align;
         var w = node.getData('width');
         var h = node.getData('height');
 
         if(type == 'begin') {
-            if(dim.align == "center") {
+            if(align == "center") {
                 return this.dispatch(s, $C(0, h/2), $C(-w/2, 0),
                                      $C(0, -h/2),$C(w/2, 0));
-            } else if(dim.align == "left") {
+            } else if(align == "left") {
                 return this.dispatch(s, $C(0, h), $C(0, 0),
                                      $C(0, 0), $C(w, 0));
-            } else if(dim.align == "right") {
+            } else if(align == "right") {
                 return this.dispatch(s, $C(0, 0), $C(-w, 0),
                                      $C(0, -h),$C(0, 0));
             } else throw "align: not implemented";
 
 
         } else if(type == 'end') {
-            if(dim.align == "center") {
+            if(align == "center") {
                 return this.dispatch(s, $C(0, -h/2), $C(w/2, 0),
                                      $C(0, h/2),  $C(-w/2, 0));
-            } else if(dim.align == "left") {
+            } else if(align == "left") {
                 return this.dispatch(s, $C(0, 0), $C(w, 0),
                                      $C(0, h), $C(0, 0));
-            } else if(dim.align == "right") {
+            } else if(align == "right") {
                 return this.dispatch(s, $C(0, -h),$C(0, 0),
                                      $C(0, 0), $C(-w, 0));
             } else throw "align: not implemented";
         }
     },
-
+    
     /*
        Adjusts the tree position due to canvas scaling or translation.
     */
     getScaledTreePosition: function(node, scale) {
         var dim = this.node;
+        var align = node.getData('align') || dim.align;
         var w = node.getData('width');
         var h = node.getData('height');
         var s = (this.config.multitree
@@ -9720,13 +9805,13 @@ $jit.ST.Geom = new Class({
             return node.pos.add(new Complex(a, b)).$scale(1 - scale);
           };
         };
-        if(dim.align == "left") {
+        if(align == "left") {
             return this.dispatch(s, $C(0, h), $C(0, 0),
                                  $C(0, 0), $C(w, 0));
-        } else if(dim.align == "center") {
+        } else if(align == "center") {
             return this.dispatch(s, $C(0, h / 2), $C(-w / 2, 0),
                                  $C(0, -h / 2),$C(w / 2, 0));
-        } else if(dim.align == "right") {
+        } else if(align == "right") {
             return this.dispatch(s, $C(0, 0), $C(-w, 0),
                                  $C(0, -h),$C(0, 0));
         } else throw "align: not implemented";
@@ -9929,6 +10014,7 @@ $jit.ST.Label.DOM = new Class({
         var pos = node.pos.getc(true),
             config = this.viz.config,
             dim = config.Node,
+            align = node.getData('align') || dim.align,
             canvas = this.viz.canvas,
             w = node.getData('width'),
             h = node.getData('height'),
@@ -9942,12 +10028,12 @@ $jit.ST.Label.DOM = new Class({
             posx = pos.x * sx + ox,
             posy = pos.y * sy + oy;
 
-        if(dim.align == "center") {
+        if(align == "center") {
             labelPos= {
                 x: Math.round(posx - w / 2 + radius.width/2),
                 y: Math.round(posy - h / 2 + radius.height/2)
             };
-        } else if (dim.align == "left") {
+        } else if (align == "left") {
             orn = config.orientation;
             if(orn == "bottom" || orn == "top") {
                 labelPos= {
@@ -9960,7 +10046,7 @@ $jit.ST.Label.DOM = new Class({
                     y: Math.round(posy - h / 2 + radius.height/2)
                 };
             }
-        } else if(dim.align == "right") {
+        } else if(align == "right") {
             orn = config.orientation;
             if(orn == "bottom" || orn == "top") {
                 labelPos= {
@@ -17502,6 +17588,74 @@ $jit.RGraph.$extend = true;
 
      */
     RGraph.Label = {};
+	
+	/*
+     RGraph.Label.NativeHTML
+
+     Custom extension of <Graph.Label.NativeHTML>.
+
+     Extends:
+
+     All <Graph.Label.NativeHTML> methods.
+
+     See also:
+
+     <Graph.Label.NativeHTML>
+
+	  */
+	RGraph.Label.NativeHTML = new Class( {
+		Implements: [Graph.Label.HTML, Graph.Label.Native],
+
+		initialize: function(viz){
+		  this.viz = viz;
+		},
+		/* 
+		   placeLabel
+
+		   Overrides abstract method placeLabel in <Graph.Plot>.
+
+		   Parameters:
+
+		   tag - A DOM label element.
+		   node - A <Graph.Node>.
+		   controller - A configuration/controller object passed to the visualization.
+		  
+		 */
+		placeLabel: function(tag, node, controller){
+		  var pos = node.pos.getc(true), 
+			  canvas = this.viz.canvas,
+			  ox = canvas.translateOffsetX,
+			  oy = canvas.translateOffsetY,
+			  sx = canvas.scaleOffsetX,
+			  sy = canvas.scaleOffsetY,
+			  radius = canvas.getSize();
+		  var labelPos = {
+			x: Math.round(pos.x * sx + ox + radius.width / 2),
+			y: Math.round(pos.y * sy + oy + radius.height / 2)
+		  };
+
+		  var style = tag.style;
+		  style.left = labelPos.x + 'px';
+		  style.top = labelPos.y - 5 + 'px';
+		  style.display = this.fitsInCanvas(labelPos, canvas)? '' : 'none';
+		  style.fontSize = node.getLabelData('size') * sx + 'px';
+
+		  controller.onPlaceLabel(tag, node);
+		  
+		  var ctx = canvas.getCtx();
+		  var pos = node.pos.getc(true);
+
+		  ctx.font = node.getLabelData('style') + ' ' + node.getLabelData('size') + 'px ' + node.getLabelData('family');
+		  ctx.textAlign = node.getLabelData('textAlign');
+		  ctx.fillStyle = ctx.strokeStyle = node.getLabelData('color');
+		  ctx.textBaseline = node.getLabelData('textBaseline');
+
+		  this.renderLabel(canvas, node, controller);
+		  
+		  
+		}
+	});
+
 
     /*
      RGraph.Label.Native

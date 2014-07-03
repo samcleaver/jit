@@ -307,6 +307,90 @@ Graph.Label.DOM = new Class({
     }
 });
 
+
+
+/*
+   Class: Graph.Label.NativeHTML
+
+   Implements NativeHTML labels.
+
+   Extends:
+
+   All <Graph.Label.DOM> methods.
+
+*/
+Graph.Label.NativeHTML = new Class({
+    Implements: Graph.Label.DOM,
+
+    /*
+       Method: plotLabel
+
+       Plots a label for a given node.
+
+       Parameters:
+
+       canvas - (object) A <Canvas> instance.
+       node - (object) A <Graph.Node>.
+       controller - (object) A configuration object.
+       
+      Example:
+       
+       (start code js)
+       var viz = new $jit.Viz(options);
+       var node = viz.graph.getNode('nodeId');
+       viz.labels.plotLabel(viz.canvas, node, viz.config);
+       (end code)
+
+
+    */
+    plotLabel: function(canvas, node, controller) {
+      var id = node.id, tag = this.getLabel(id);
+
+      if(!tag && !(tag = document.getElementById(id))) {
+        tag = document.createElement('div');
+        var container = this.getLabelContainer();
+        tag.id = id;
+        tag.className = 'node';
+        tag.style.position = 'absolute';
+        controller.onCreateLabel(tag, node);
+        container.appendChild(tag);
+        this.labels[node.id] = tag;
+      }
+
+      this.placeLabel(tag, node, controller);
+      
+      var ctx = canvas.getCtx();
+      var pos = node.pos.getc(true);
+
+      ctx.font = node.getLabelData('style') + ' ' + node.getLabelData('size') + 'px ' + node.getLabelData('family');
+      ctx.textAlign = node.getLabelData('textAlign');
+      ctx.fillStyle = ctx.strokeStyle = node.getLabelData('color');
+      ctx.textBaseline = node.getLabelData('textBaseline');
+
+      this.renderLabel(canvas, node, controller);
+      
+    },
+    
+    /*
+       renderLabel
+
+       Does the actual rendering of the label in the canvas. The default
+       implementation renders the label close to the position of the node, this
+       method should be overriden to position the labels differently.
+
+       Parameters:
+
+       canvas - A <Canvas> instance.
+       node - A <Graph.Node>.
+       controller - A configuration object. See also <Hypertree>, <RGraph>, <ST>.
+    */
+    renderLabel: function(canvas, node, controller) {
+      var ctx = canvas.getCtx();
+      var pos = node.pos.getc(true);
+      ctx.fillText(node.name, pos.x, pos.y + node.getData("height") / 2);
+    }
+});
+
 /*
    Class: Graph.Label.HTML
 

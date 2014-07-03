@@ -25,7 +25,7 @@ var ExtrasInitializer = {
     this.config = viz.config[className];
     this.nodeTypes = viz.fx.nodeTypes;
     var type = this.config.type;
-    this.dom = type == 'auto'? (viz.config.Label.type != 'Native') : (type != 'Native');
+	this.dom = type == 'auto'? (viz.config.Label.type != 'Native' && viz.config.Label.type != 'NativeHTML') : (type != 'Native' && type != 'NativeHTML');
     this.labelContainer = this.dom && viz.labels.getLabelContainer();
     this.isEnabled() && this.initializePost();
   },

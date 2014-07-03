@@ -303,6 +303,74 @@ $jit.RGraph.$extend = true;
 
      */
     RGraph.Label = {};
+	
+	/*
+     RGraph.Label.NativeHTML
+
+     Custom extension of <Graph.Label.NativeHTML>.
+
+     Extends:
+
+     All <Graph.Label.NativeHTML> methods.
+
+     See also:
+
+     <Graph.Label.NativeHTML>
+
+	  */
+	RGraph.Label.NativeHTML = new Class( {
+		Implements: [Graph.Label.HTML, Graph.Label.Native],
+
+		initialize: function(viz){
+		  this.viz = viz;
+		},
+		/* 
+		   placeLabel
+
+		   Overrides abstract method placeLabel in <Graph.Plot>.
+
+		   Parameters:
+
+		   tag - A DOM label element.
+		   node - A <Graph.Node>.
+		   controller - A configuration/controller object passed to the visualization.
+		  
+		 */
+		placeLabel: function(tag, node, controller){
+		  var pos = node.pos.getc(true), 
+			  canvas = this.viz.canvas,
+			  ox = canvas.translateOffsetX,
+			  oy = canvas.translateOffsetY,
+			  sx = canvas.scaleOffsetX,
+			  sy = canvas.scaleOffsetY,
+			  radius = canvas.getSize();
+		  var labelPos = {
+			x: Math.round(pos.x * sx + ox + radius.width / 2),
+			y: Math.round(pos.y * sy + oy + radius.height / 2)
+		  };
+
+		  var style = tag.style;
+		  style.left = labelPos.x + 'px';
+		  style.top = labelPos.y - 5 + 'px';
+		  style.display = this.fitsInCanvas(labelPos, canvas)? '' : 'none';
+		  style.fontSize = node.getLabelData('size') * sx + 'px';
+
+		  controller.onPlaceLabel(tag, node);
+		  
+		  var ctx = canvas.getCtx();
+		  var pos = node.pos.getc(true);
+
+		  ctx.font = node.getLabelData('style') + ' ' + node.getLabelData('size') + 'px ' + node.getLabelData('family');
+		  ctx.textAlign = node.getLabelData('textAlign');
+		  ctx.fillStyle = ctx.strokeStyle = node.getLabelData('color');
+		  ctx.textBaseline = node.getLabelData('textBaseline');
+
+		  this.renderLabel(canvas, node, controller);
+		  
+		  
+		}
+	});
+
 
     /*
      RGraph.Label.Native

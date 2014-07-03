@@ -371,7 +371,7 @@ var Canvas;
     
     createLabelContainer: function(type, idLabel, dim) {
       var NS = 'http://www.w3.org/2000/svg';
-      if(type == 'HTML' || type == 'Native') {
+      if(type == 'HTML' || type == 'Native' || type == "NativeHTML") {
         return $E('div', {
           'id': idLabel,
           'style': {
