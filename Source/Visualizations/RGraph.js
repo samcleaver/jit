@@ -357,6 +357,10 @@ $jit.RGraph.$extend = true;
 
 		  controller.onPlaceLabel(tag, node);
 		  
+		  //Fix for removing HTML from canvas text
+		  var text  = tag.item.textContent || tag.item.innerText;
+		  node.name = text;
+		  
 		  var ctx = canvas.getCtx();
 		  var pos = node.pos.getc(true);
 
