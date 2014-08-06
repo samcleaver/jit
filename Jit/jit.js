@@ -7957,6 +7957,10 @@ Graph.Label.NativeHTML = new Class({
       }
 
       this.placeLabel(tag, node, controller);
+	  
+	  //Fix for removing HTML from canvas text
+      var text  = tag.item.textContent || tag.item.innerText;
+      node.name = text;
       
       var ctx = canvas.getCtx();
       var pos = node.pos.getc(true);
@@ -11213,7 +11217,7 @@ $jit.ST.Plot.NodeTypes.implement({
             aggValue = aggValue !== true? aggValue : valAcum;
             if(horz) {
               ctx.textAlign = 'right';
-              ctx.fillText(aggValue, x + acum - config.labelOffset, y + height/2);
+              ctx.fillText(aggValue, x + acum - config.labelOffset + config.Margin.right, y + height/2);
             } else {
               ctx.textAlign = 'center';
               ctx.fillText(aggValue, x + width/2, y - height - label.size/2 - config.labelOffset);
@@ -11221,9 +11225,8 @@ $jit.ST.Plot.NodeTypes.implement({
           }
           if(showLabels(node.name, valAcum, node)) {
             if(horz) {
-              ctx.textAlign = 'center';
-              ctx.translate(x - config.labelOffset - label.size/2, y + height/2);
-              ctx.rotate(Math.PI / 2);
+              ctx.textAlign = 'left';
+              ctx.translate(x - config.Margin.left - config.labelOffset - label.size/2, y + height/2);
               ctx.fillText(node.name, 0, 0);
             } else {
               ctx.textAlign = 'center';
@@ -17642,6 +17645,10 @@ $jit.RGraph.$extend = true;
 		  style.fontSize = node.getLabelData('size') * sx + 'px';
 
 		  controller.onPlaceLabel(tag, node);
+		  
+		  //Fix for removing HTML from canvas text
+		  var text  = tag.item.textContent || tag.item.innerText;
+		  node.name = text;
 		  
 		  var ctx = canvas.getCtx();
 		  var pos = node.pos.getc(true);
