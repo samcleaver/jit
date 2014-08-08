@@ -2779,7 +2779,12 @@ var Canvas;
       }
     }
     if (tag == "canvas" && !supportsCanvas && G_vmlCanvasManager) {
-      elem = G_vmlCanvasManager.initElement(document.body.appendChild(elem));
+      //Fix for standard FlashCanvas
+      if (typeof FlashCanvas !== "undefined") {
+        elem = G_vmlCanvasManager.initElement(elem);
+      } else {
+        elem = G_vmlCanvasManager.initElement(document.body.appendChild(elem));
+      }
     }
     return elem;
   }
