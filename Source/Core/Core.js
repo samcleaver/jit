@@ -19,7 +19,7 @@ this.$jit = function(w) {
   }
 };
 
-$jit.version = '2.0.1';
+$jit.version = '2.0.5';
 /*
   Object: $jit.id
 
