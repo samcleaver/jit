@@ -354,12 +354,12 @@ $jit.RGraph.$extend = true;
 		  style.top = labelPos.y - 5 + 'px';
 		  style.display = this.fitsInCanvas(labelPos, canvas)? '' : 'none';
 		  style.fontSize = node.getLabelData('size') * sx + 'px';
-
-		  controller.onPlaceLabel(tag, node);
 		  
 		  //Fix for removing HTML from canvas text
-		  var text  = tag.item.textContent || tag.item.innerText;
+		  var text  = tag.textContent || tag.innerText;
 		  node.name = text;
+
+		  controller.onPlaceLabel(tag, node);
 		  
 		  var ctx = canvas.getCtx();
 		  var pos = node.pos.getc(true);
